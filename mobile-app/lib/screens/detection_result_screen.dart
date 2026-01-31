@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/detection_result.dart';
 import '../utils/constants.dart';
 import '../utils/localization.dart';
+import '../theme/app_theme.dart';
+import '../widgets/modern_ui_components.dart';
 import 'suggested_treatments_screen.dart';
 
 /// Full-page detection result screen for online mode
@@ -46,108 +48,172 @@ class _DetectionResultScreenState extends State<DetectionResultScreen> {
     return _strings[key] ?? _localizationService.translate(_languageCode, key);
   }
 
-  Widget _buildResultRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('$label:', style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(value, style: TextStyle(color: Colors.grey[700])),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final result = widget.result;
+    final confidencePercent = (result.confidence * 100).toStringAsFixed(1);
+    final isHighConfidence = result.confidence >= 0.85;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_t('detection_result')),
+        title: Text(
+          _t('detection_result'),
+          style: Theme.of(context).appBarTheme.titleTextStyle,
+        ),
         centerTitle: true,
         elevation: 0,
+        backgroundColor: AppTheme.primaryGreen,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppTheme.paddingL),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Result card
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildResultRow(_t('crop'), result.crop),
-                      _buildResultRow(_t('disease'), result.disease),
-                      _buildResultRow(
-                        _t('confidence'),
-                        '${(result.confidence * 100).toStringAsFixed(1)}%',
-                      ),
-                    ],
-                  ),
+              // Main Result Card
+              ModernCard(
+                borderRadius: AppTheme.radiusXL,
+                padding: const EdgeInsets.all(AppTheme.paddingL),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Confidence badge
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _t('detection_result'),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.charcoal,
+                              ),
+                        ),
+                        StatusBadge(
+                          label: '$confidencePercent%',
+                          backgroundColor: isHighConfidence
+                              ? AppTheme.successGreen.withOpacity(0.2)
+                              : AppTheme.warningOrange.withOpacity(0.2),
+                          textColor: isHighConfidence
+                              ? AppTheme.successGreen
+                              : AppTheme.warningOrange,
+                          icon: isHighConfidence
+                              ? Icons.check_circle
+                              : Icons.info,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.paddingL),
+                    // Crop Info
+                    InfoRow(
+                      icon: Icons.agriculture,
+                      label: _t('crop'),
+                      value: result.crop,
+                    ),
+                    const SizedBox(height: AppTheme.paddingM),
+                    // Disease Info
+                    InfoRow(
+                      icon: Icons.nature,
+                      label: _t('disease'),
+                      value: result.disease,
+                      valueColor: AppTheme.dangerRed,
+                    ),
+                    const SizedBox(height: AppTheme.paddingM),
+                    // Confidence Info
+                    InfoRow(
+                      icon: Icons.trending_up,
+                      label: _t('confidence'),
+                      value: '$confidencePercent%',
+                      valueColor: isHighConfidence
+                          ? AppTheme.successGreen
+                          : AppTheme.warningOrange,
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.paddingXXL),
 
-              // Remedies section
-              Text(
-                _t('remedies'),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
+              // Remedies Section
+              SectionHeader(title: _t('remedies')),
+              const SizedBox(height: AppTheme.paddingM),
 
-              Card(
-                elevation: 1,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
+              if (result.remedies.isEmpty)
+                EmptyState(
+                  icon: Icons.medical_services,
+                  title: _t('no_remedies'),
+                  subtitle: _t('contact_support'),
+                  iconColor: AppTheme.accentGreen.withOpacity(0.4),
+                )
+              else
+                ModernCard(
+                  borderRadius: AppTheme.radiusXL,
+                  padding: const EdgeInsets.all(AppTheme.paddingL),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: result.remedies
-                        .map(
-                          (remedy) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  '• ',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                    children: result.remedies.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final remedy = entry.value;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.accentGreen.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusXL,
                                   ),
                                 ),
-                                Expanded(child: Text(remedy)),
-                              ],
-                            ),
+                                child: Center(
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: const TextStyle(
+                                      color: AppTheme.primaryGreen,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: AppTheme.paddingM),
+                              Expanded(
+                                child: Text(
+                                  remedy,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: AppTheme.charcoal,
+                                        height: 1.5,
+                                      ),
+                                ),
+                              ),
+                            ],
                           ),
-                        )
-                        .toList(),
+                          if (index < result.remedies.length - 1)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppTheme.paddingM,
+                              ),
+                              child: Divider(
+                                color: AppTheme.dividerColor,
+                                height: 1,
+                              ),
+                            ),
+                        ],
+                      );
+                    }).toList(),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: AppTheme.paddingXXL),
 
-              // Action buttons
-              ElevatedButton(
+              // Action Buttons
+              GradientButton(
+                label: _t('treatment_options'),
+                icon: Icons.medical_services,
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -160,23 +226,16 @@ class _DetectionResultScreenState extends State<DetectionResultScreen> {
                     ),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(_t('treatment_options')),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppTheme.paddingM),
               OutlinedButton(
                 onPressed: () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppTheme.paddingL,
+                  ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
                   ),
                 ),
                 child: Text(_t('back_to_home')),

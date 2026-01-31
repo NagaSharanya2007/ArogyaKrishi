@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/chatbot_service.dart';
 import '../models/chat_message.dart';
 import '../utils/constants.dart';
+import '../theme/app_theme.dart';
 
 /// Chat screen with text and voice support
 class ChatScreen extends StatefulWidget {
@@ -277,9 +278,16 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Agricultural Assistant'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
+        title: Row(
+          children: [
+            const Icon(Icons.smart_toy, size: 24),
+            const SizedBox(width: AppTheme.paddingS),
+            const Text('AI Assistant'),
+          ],
+        ),
+        backgroundColor: AppTheme.primaryGreen,
+        foregroundColor: AppTheme.white,
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.language),
@@ -299,23 +307,65 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: _messages.isEmpty
                 ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.chat_bubble_outline,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Ask me anything about farming!',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppTheme.paddingXL),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppTheme.paddingXL),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  AppTheme.accentGreen,
+                                  AppTheme.primaryLightGreen,
+                                ],
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.accentGreen.withOpacity(0.3),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.smart_toy,
+                              size: 64,
+                              color: AppTheme.white,
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: AppTheme.paddingXL),
+                          Text(
+                            'Hi! I\'m your AI Farming Assistant',
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(
+                                  color: AppTheme.charcoal,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppTheme.paddingM),
+                          Text(
+                            'Ask me anything about crops, diseases, remedies, or farming practices!',
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: AppTheme.mediumGrey),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppTheme.paddingXL),
+                          Wrap(
+                            spacing: AppTheme.paddingS,
+                            runSpacing: AppTheme.paddingS,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              _buildSuggestionChip('How to treat leaf spots?'),
+                              _buildSuggestionChip('Best fertilizers for rice'),
+                              _buildSuggestionChip('Pest control tips'),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -339,36 +389,76 @@ class _ChatScreenState extends State<ChatScreen> {
           // Input area
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.black.withOpacity(0.08),
                   spreadRadius: 1,
-                  blurRadius: 3,
-                  offset: const Offset(0, -1),
+                  blurRadius: 4,
+                  offset: const Offset(0, -2),
                 ),
               ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            padding: const EdgeInsets.all(AppTheme.paddingM),
             child: Row(
               children: [
-                // Voice button
-                GestureDetector(
-                  onLongPressStart: (_) => _startRecording(),
-                  onLongPressEnd: (_) => _stopRecordingAndSend(),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: _isRecording ? Colors.red : Colors.green,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: Icon(
-                      _isRecording ? Icons.mic : Icons.mic_none,
-                      color: Colors.white,
+                // Voice button with proper handlers
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      if (!_isRecording) {
+                        await _startRecording();
+                        // Show snackbar with instruction
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              'Recording... Tap again to send',
+                            ),
+                            duration: const Duration(seconds: 2),
+                            backgroundColor: AppTheme.dangerRed,
+                          ),
+                        );
+                      } else {
+                        await _stopRecordingAndSend();
+                      }
+                    },
+                    customBorder: const CircleBorder(),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: _isRecording
+                            ? const LinearGradient(
+                                colors: [AppTheme.dangerRed, Colors.redAccent],
+                              )
+                            : const LinearGradient(
+                                colors: [
+                                  AppTheme.primaryGreen,
+                                  AppTheme.primaryLightGreen,
+                                ],
+                              ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                (_isRecording
+                                        ? AppTheme.dangerRed
+                                        : AppTheme.primaryGreen)
+                                    .withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(AppTheme.paddingM),
+                      child: Icon(
+                        _isRecording ? Icons.stop : Icons.mic,
+                        color: AppTheme.white,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.paddingM),
 
                 // Text field
                 Expanded(
@@ -376,17 +466,18 @@ class _ChatScreenState extends State<ChatScreen> {
                     controller: _textController,
                     decoration: InputDecoration(
                       hintText: _isRecording
-                          ? 'Recording...'
-                          : 'Type your question...',
+                          ? 'Recording... Tap mic to stop'
+                          : 'Ask me anything...',
+                      hintStyle: TextStyle(color: AppTheme.mediumGrey),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: Colors.grey[100],
+                      fillColor: AppTheme.lightGrey,
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
+                        horizontal: AppTheme.paddingL,
+                        vertical: AppTheme.paddingM,
                       ),
                     ),
                     enabled: !_isRecording,
@@ -394,15 +485,26 @@ class _ChatScreenState extends State<ChatScreen> {
                     textCapitalization: TextCapitalization.sentences,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppTheme.paddingS),
 
                 // Send button
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  color: Colors.green,
-                  onPressed: _isLoading || _isRecording
-                      ? null
-                      : _sendTextMessage,
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        AppTheme.primaryGreen,
+                        AppTheme.primaryLightGreen,
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.send_rounded),
+                    color: AppTheme.white,
+                    onPressed: _isLoading || _isRecording
+                        ? null
+                        : _sendTextMessage,
+                  ),
                 ),
               ],
             ),
@@ -412,11 +514,42 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Widget _buildSuggestionChip(String text) {
+    return GestureDetector(
+      onTap: () {
+        _textController.text = text;
+        _sendTextMessage();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.paddingL,
+          vertical: AppTheme.paddingM,
+        ),
+        decoration: BoxDecoration(
+          color: AppTheme.lightGrey,
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+          border: Border.all(
+            color: AppTheme.accentGreen.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: AppTheme.primaryGreen,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMessageBubble(ChatMessage message) {
     final isUser = message.isUser;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppTheme.paddingM),
       child: Row(
         mainAxisAlignment: isUser
             ? MainAxisAlignment.end
@@ -424,17 +557,51 @@ class _ChatScreenState extends State<ChatScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser)
-            CircleAvatar(
-              backgroundColor: Colors.green,
-              child: const Icon(Icons.agriculture, color: Colors.white),
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppTheme.accentGreen, AppTheme.primaryLightGreen],
+                ),
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(AppTheme.paddingS),
+              child: const Icon(
+                Icons.smart_toy,
+                color: AppTheme.white,
+                size: 20,
+              ),
             ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.paddingS),
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.all(AppTheme.paddingL),
               decoration: BoxDecoration(
-                color: isUser ? Colors.green[700] : Colors.grey[200],
-                borderRadius: BorderRadius.circular(16),
+                gradient: isUser
+                    ? const LinearGradient(
+                        colors: [
+                          AppTheme.primaryGreen,
+                          AppTheme.primaryLightGreen,
+                        ],
+                      )
+                    : null,
+                color: isUser ? null : AppTheme.lightGrey,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppTheme.radiusL),
+                  topRight: Radius.circular(AppTheme.radiusL),
+                  bottomLeft: isUser
+                      ? Radius.circular(AppTheme.radiusL)
+                      : Radius.circular(AppTheme.radiusS),
+                  bottomRight: isUser
+                      ? Radius.circular(AppTheme.radiusS)
+                      : Radius.circular(AppTheme.radiusL),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -442,19 +609,20 @@ class _ChatScreenState extends State<ChatScreen> {
                   Text(
                     message.content,
                     style: TextStyle(
-                      color: isUser ? Colors.white : Colors.black87,
+                      color: isUser ? AppTheme.white : AppTheme.charcoal,
                       fontSize: 15,
+                      height: 1.4,
                     ),
                   ),
                   if (!isUser && message.audioUrl != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.only(top: AppTheme.paddingS),
                       child: IconButton(
                         icon: Icon(
                           _isPlayingAudio
                               ? Icons.volume_up
                               : Icons.volume_up_outlined,
-                          color: Colors.green,
+                          color: AppTheme.primaryGreen,
                         ),
                         onPressed: () => _playAudioUrl(message.audioUrl!),
                         tooltip: 'Play audio',
@@ -464,11 +632,17 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.paddingS),
           if (isUser)
-            CircleAvatar(
-              backgroundColor: Colors.green[700],
-              child: const Icon(Icons.person, color: Colors.white),
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppTheme.primaryGreen, AppTheme.primaryLightGreen],
+                ),
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(AppTheme.paddingS),
+              child: const Icon(Icons.person, color: AppTheme.white, size: 20),
             ),
         ],
       ),

@@ -4,6 +4,8 @@ import '../services/image_asset_service.dart';
 import '../services/notification_service.dart';
 import '../utils/constants.dart';
 import '../utils/localization.dart';
+import '../theme/app_theme.dart';
+import '../widgets/modern_ui_components.dart';
 import 'offline_detection_result_screen.dart';
 
 /// Offline detection screen with crop -> symptom -> disease -> remedy flow
@@ -89,9 +91,11 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
           _selectedCrop != null
               ? _t('offline_identify_symptoms_title')
               : _t('offline_select_crop_title'),
+          style: Theme.of(context).appBarTheme.titleTextStyle,
         ),
         centerTitle: true,
         elevation: 0,
+        backgroundColor: AppTheme.primaryGreen,
         actions: [
           if (_languagePacks.isNotEmpty)
             PopupMenuButton<String>(
@@ -114,7 +118,7 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(AppTheme.paddingL),
             child: _buildContent(),
           ),
         ),
@@ -139,7 +143,21 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 16),
+        Text(
+          _t('offline_select_crop_title'),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppTheme.charcoal,
+          ),
+        ),
+        const SizedBox(height: AppTheme.paddingS),
+        Text(
+          _t('offline_select_crop_body'),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.mediumGrey),
+        ),
+        const SizedBox(height: AppTheme.paddingXL),
 
         // Modern crop grid with full-bleed images
         GridView.builder(
@@ -147,9 +165,9 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            childAspectRatio: 0.75, // Vertical emphasis
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
+            childAspectRatio: 0.75,
+            crossAxisSpacing: AppTheme.paddingL,
+            mainAxisSpacing: AppTheme.paddingL,
           ),
           itemCount: crops.length,
           itemBuilder: (context, index) {
@@ -158,7 +176,7 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
           },
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.paddingXXL),
       ],
     );
   }
@@ -171,7 +189,7 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -200,7 +218,7 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.55),
+                          Colors.black.withOpacity(0.6),
                         ],
                       ),
                     ),
@@ -209,17 +227,17 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
 
                 // Crop name over image
                 Positioned(
-                  left: 12,
-                  right: 12,
-                  bottom: 12,
+                  left: AppTheme.paddingM,
+                  right: AppTheme.paddingM,
+                  bottom: AppTheme.paddingM,
                   child: Text(
                     _t(crop.nameKey),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppTheme.white,
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       letterSpacing: 0.2,
                     ),
                   ),
@@ -230,26 +248,24 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                         border: Border.all(
-                          color: Theme.of(context).primaryColor,
+                          color: AppTheme.primaryGreen,
                           width: 3,
                         ),
                       ),
                       child: Container(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withOpacity(0.15),
                         child: Center(
                           child: Container(
                             width: 56,
                             height: 56,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Theme.of(context).primaryColor,
+                              color: AppTheme.primaryGreen,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Theme.of(
-                                    context,
-                                  ).primaryColor.withOpacity(0.3),
+                                  color: AppTheme.primaryGreen.withOpacity(0.3),
                                   blurRadius: 8,
                                   spreadRadius: 2,
                                 ),
@@ -257,7 +273,7 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
                             ),
                             child: const Icon(
                               Icons.check,
-                              color: Colors.white,
+                              color: AppTheme.white,
                               size: 32,
                             ),
                           ),
@@ -293,17 +309,15 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 16),
         // Crop name subheading
         Text(
           _t(_selectedCrop!.nameKey),
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Colors.green[700],
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: AppTheme.primaryGreen,
             fontWeight: FontWeight.w700,
-            fontSize: 20,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.paddingS),
         // Prompt text
         Text(
           _tWithVars('offline_symptom_prompt', {
@@ -311,9 +325,9 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
           }),
           style: Theme.of(
             context,
-          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.mediumGrey),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.paddingXL),
 
         // Symptoms grid - image-centric
         GridView.builder(
@@ -322,8 +336,8 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             childAspectRatio: 1.0,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            crossAxisSpacing: AppTheme.paddingM,
+            mainAxisSpacing: AppTheme.paddingM,
           ),
           itemCount: symptomList.length,
           itemBuilder: (context, index) {
@@ -333,66 +347,68 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
           },
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: AppTheme.paddingXL),
 
         // Analyze button
         if (_selectedSymptoms.isNotEmpty)
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green[300]!),
+              ModernCard(
+                backgroundColor: AppTheme.accentGreen.withOpacity(0.1),
+                border: Border.all(
+                  color: AppTheme.accentGreen.withOpacity(0.3),
                 ),
-                child: Text(
-                  _tWithVars('offline_selected_symptoms', {
-                    'symptoms': _selectedSymptoms
-                        .map((s) => _t(s.nameKey))
-                        .join(', '),
-                  }),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.green[700],
-                    fontWeight: FontWeight.w500,
-                  ),
+                padding: const EdgeInsets.all(AppTheme.paddingM),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _t('offline_selected_symptoms_title'),
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: AppTheme.primaryGreen,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.paddingS),
+                    Wrap(
+                      spacing: AppTheme.paddingS,
+                      runSpacing: AppTheme.paddingS,
+                      children: _selectedSymptoms
+                          .map(
+                            (s) => StatusBadge(
+                              label: _t(s.nameKey),
+                              backgroundColor: AppTheme.primaryGreen,
+                              textColor: AppTheme.white,
+                              fontSize: 11,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
+              const SizedBox(height: AppTheme.paddingL),
+              GradientButton(
+                label: _t('offline_analyze_symptoms'),
+                icon: Icons.search,
                 onPressed: _analyzeSymptoms,
-                icon: const Icon(Icons.search),
-                label: Text(_t('offline_analyze_symptoms')),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
               ),
             ],
           )
         else
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: Text(
-              _t('offline_select_symptoms_hint'),
-              textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+          ModernCard(
+            backgroundColor: AppTheme.lightGrey,
+            border: Border.all(color: AppTheme.dividerColor),
+            padding: const EdgeInsets.all(AppTheme.paddingL),
+            child: EmptyState(
+              icon: Icons.touch_app,
+              title: _t('offline_select_symptoms_hint'),
+              iconColor: AppTheme.accentGreen.withOpacity(0.3),
             ),
           ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.paddingXL),
       ],
     );
   }
@@ -411,19 +427,21 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
       child: Card(
         elevation: isSelected ? 4 : 1,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radiusL),
           side: BorderSide(
-            color: isSelected ? Colors.green[600]! : Colors.grey[300]!,
+            color: isSelected ? AppTheme.primaryGreen : AppTheme.dividerColor,
             width: isSelected ? 3 : 1,
           ),
         ),
-        color: isSelected ? Colors.green[50] : Colors.white,
+        color: isSelected
+            ? AppTheme.accentGreen.withOpacity(0.1)
+            : AppTheme.white,
         child: Stack(
           fit: StackFit.expand,
           children: [
             // Image background
             ClipRRect(
-              borderRadius: BorderRadius.circular(11),
+              borderRadius: BorderRadius.circular(AppTheme.radiusL - 1),
               child: ImageAssetService.buildSymptomImage(
                 symptomId: symptom.id,
                 imagePath: symptom.imagePath,
@@ -434,20 +452,20 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
             // Gradient overlay
             Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(11),
+                borderRadius: BorderRadius.circular(AppTheme.radiusL - 1),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.1),
-                    Colors.black.withOpacity(0.4),
+                    Colors.black.withOpacity(0.15),
+                    Colors.black.withOpacity(0.5),
                   ],
                 ),
               ),
             ),
             // Content
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(AppTheme.paddingM),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,13 +474,13 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
                   if (isSelected)
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.green[600],
-                        borderRadius: BorderRadius.circular(20),
+                        color: AppTheme.primaryGreen,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                       ),
                       padding: const EdgeInsets.all(4),
                       child: const Icon(
                         Icons.check,
-                        color: Colors.white,
+                        color: AppTheme.white,
                         size: 20,
                       ),
                     ),
@@ -473,8 +491,8 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
                       Text(
                         _t(symptom.nameKey),
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                          color: AppTheme.white,
+                          fontWeight: FontWeight.w700,
                           fontSize: 13,
                         ),
                         maxLines: 2,
@@ -484,8 +502,9 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
                       Text(
                         _t(symptom.descriptionKey),
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppTheme.white,
                           fontSize: 11,
+                          fontWeight: FontWeight.w400,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,

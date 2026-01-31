@@ -17,6 +17,8 @@ import 'search_history_screen.dart';
 import 'notification_inbox_screen.dart';
 import '../utils/constants.dart';
 import '../utils/localization.dart';
+import '../theme/app_theme.dart';
+import '../widgets/modern_ui_components.dart';
 
 /// Home screen with image capture/selection and preview
 class HomeScreen extends StatefulWidget {
@@ -467,11 +469,11 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       // Send detection notification
-      if (result.disease != null && result.disease!.isNotEmpty) {
+      if (result.disease.isNotEmpty) {
         await NotificationService.sendDetectionNotification(
-          crop: result.crop ?? 'Unknown',
-          disease: result.disease ?? 'Unknown',
-          confidence: result.confidence ?? 0.0,
+          crop: result.crop,
+          disease: result.disease,
+          confidence: result.confidence,
           language: _languageCode,
         );
         setState(() {}); // Refresh to update badge count
@@ -515,12 +517,74 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Build a modern quick action card
+  Widget _buildQuickActionCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ModernCard(
+      onTap: onTap,
+      borderRadius: AppTheme.radiusXL,
+      padding: const EdgeInsets.all(AppTheme.paddingXL),
+      child: Column(
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color, color.withOpacity(0.7)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(icon, size: 40, color: AppTheme.white),
+          ),
+          const SizedBox(height: AppTheme.paddingL),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: AppTheme.charcoal,
+              fontWeight: FontWeight.w700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppTheme.paddingS),
+          Text(
+            subtitle,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppTheme.mediumGrey),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_t('app_title')),
+        title: Text(
+          _t('app_title'),
+          style: Theme.of(context).appBarTheme.titleTextStyle,
+        ),
         centerTitle: true,
+        elevation: 0,
+        backgroundColor: AppTheme.primaryGreen,
         actions: [
           // Notifications button with badge
           FutureBuilder<int>(
@@ -539,7 +603,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       );
                     },
-                    tooltip: 'Notifications',
+                    tooltip: _t('notifications'),
                   ),
                   if (unreadCount > 0)
                     Positioned(
@@ -547,20 +611,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       top: 8,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.red,
+                          color: AppTheme.dangerRed,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         constraints: const BoxConstraints(
-                          minWidth: 20,
-                          minHeight: 20,
+                          minWidth: 18,
+                          minHeight: 18,
                         ),
                         child: Center(
                           child: Text(
                             unreadCount > 99 ? '99+' : '$unreadCount',
                             style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                              color: AppTheme.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -570,30 +634,7 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          // Search History button
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SearchHistoryScreen(),
-                ),
-              );
-            },
-            tooltip: 'Search History',
-          ),
-          // Chat button
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ChatScreen()),
-              );
-            },
-            tooltip: 'Chat Assistant',
-          ),
+          // Language selector
           if (_languagePacks.isNotEmpty)
             PopupMenuButton<String>(
               onSelected: _setLanguage,
@@ -610,308 +651,281 @@ class _HomeScreenState extends State<HomeScreen> {
                     .toList();
               },
             ),
-          // Connection status indicator
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-            child: Center(
-              child: Tooltip(
-                message: _isOnline ? _t('online') : _t('offline_mode'),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+          // AI Chat button (prominent)
+          IconButton(
+            icon: const Icon(Icons.smart_toy),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ChatScreen()),
+              );
+            },
+            tooltip: _t('ai_assistant'),
+          ),
+          // More options menu
+          PopupMenuButton<String>(
+            tooltip: _t('more_options'),
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'history') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SearchHistoryScreen(),
                   ),
-                  decoration: BoxDecoration(
-                    color: _isOnline
-                        ? Colors.green.withOpacity(0.2)
-                        : Colors.orange.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _isOnline ? Icons.cloud_done : Icons.cloud_off,
-                        size: 16,
-                        color: _isOnline ? Colors.green : Colors.orange,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _isOnline ? _t('online') : _t('offline'),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _isOnline ? Colors.green : Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'history',
+                child: Row(
+                  children: [
+                    const Icon(Icons.history, color: AppTheme.primaryGreen),
+                    const SizedBox(width: AppTheme.paddingM),
+                    Text(_t('search_history')),
+                  ],
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Offline mode banner
-                if (!_isOnline)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      border: Border.all(color: Colors.orange.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.warning_amber, color: Colors.orange[700]),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _t('you_are_offline'),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange[700],
-                                ),
-                              ),
-                              Text(
-                                _t('using_offline_mode'),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.orange[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // Nearby alerts banner
-                if (!_isFetchingAlerts && _nearbyAlerts.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      border: Border.all(color: Colors.blue.shade200),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.blue[700]),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _t('nearby_alerts_title'),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue[700],
-                                ),
-                              ),
-                              Text(
-                                _tWithVars('nearby_alerts_body', {
-                                  'count': _nearbyAlerts.length.toString(),
-                                }),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.blue[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // Quick action buttons
-                if (!_isOnline)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Connection Status Banner (if offline)
+              if (!_isOnline)
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.paddingM),
+                  color: AppTheme.warningOrange.withOpacity(0.15),
+                  child: Row(
                     children: [
-                      Text(
-                        _t('quick_actions'),
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                      Icon(
+                        Icons.cloud_off,
+                        color: AppTheme.warningOrange,
+                        size: 20,
                       ),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: _goToOfflineMode,
-                        icon: const Icon(Icons.eco),
-                        label: Text(_t('offline_diagnosis')),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[700],
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                      const SizedBox(width: AppTheme.paddingM),
+                      Expanded(
+                        child: Text(
+                          _t('you_are_offline'),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: AppTheme.warningOrange,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
-                      const SizedBox(height: 24),
                     ],
                   ),
+                ),
 
-                // Image preview section or main content
-                if (_selectedImage != null) ...[
-                  Card(
-                    clipBehavior: Clip.antiAlias,
-                    child: Stack(
-                      children: [
-                        // Image preview with constrained height
-                        Container(
-                          constraints: const BoxConstraints(maxHeight: 400),
-                          child: Center(
-                            child: Image.file(
-                              _selectedImage!,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
+              // Nearby Alerts Banner
+              if (!_isFetchingAlerts && _nearbyAlerts.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.paddingM),
+                  color: AppTheme.accentGreen.withOpacity(0.15),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: AppTheme.primaryGreen,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppTheme.paddingM),
+                      Expanded(
+                        child: Text(
+                          _tWithVars('nearby_alerts_body', {
+                            'count': _nearbyAlerts.length.toString(),
+                          }),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: AppTheme.primaryGreen,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
-                        // Clear button
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: IconButton(
-                            onPressed: _clearImage,
-                            icon: const Icon(Icons.close),
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.black,
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Main Content
+              Padding(
+                padding: const EdgeInsets.all(AppTheme.paddingL),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Welcome Section
+                    if (_selectedImage == null && _isOnline) ...[
+                      Text(
+                        _t('app_welcome_title'),
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              color: AppTheme.charcoal,
+                              fontWeight: FontWeight.w700,
                             ),
-                          ),
+                      ),
+                      const SizedBox(height: AppTheme.paddingS),
+                      Text(
+                        _t('app_welcome_subtitle'),
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppTheme.mediumGrey,
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ] else if (_isOnline) ...[
-                  // Online mode content - no Expanded
-                  Container(
-                    constraints: const BoxConstraints(minHeight: 300),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.image_outlined,
-                            size: 100,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _t('disease_detection'),
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _t('take_photo_or_gallery'),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
                       ),
-                    ),
-                  ),
-                ] else ...[
-                  // Offline mode - no image
-                  const SizedBox(height: 24),
-                ],
+                      const SizedBox(height: AppTheme.paddingXL),
+                    ],
 
-                // Error message
-                if (_errorMessage != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        border: Border.all(color: Colors.red.shade300),
-                        borderRadius: BorderRadius.circular(8),
+                    // Error Message
+                    if (_errorMessage != null) ...[
+                      ModernCard(
+                        backgroundColor: AppTheme.dangerRed.withOpacity(0.1),
+                        border: Border.all(
+                          color: AppTheme.dangerRed.withOpacity(0.3),
+                        ),
+                        padding: const EdgeInsets.all(AppTheme.paddingM),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: AppTheme.dangerRed,
+                              size: 20,
+                            ),
+                            const SizedBox(width: AppTheme.paddingM),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: AppTheme.dangerRed),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Text(
-                        _errorMessage!,
-                        style: TextStyle(color: Colors.red[700]),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
+                      const SizedBox(height: AppTheme.paddingL),
+                    ],
 
-                // Action buttons
-                if (_isOnline)
-                  if (_selectedImage != null)
-                    ElevatedButton.icon(
-                      onPressed: _isLoading ? null : _detectDisease,
-                      icon: _isLoading
-                          ? SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Theme.of(context).primaryColor,
+                    // Image Preview or Quick Actions
+                    if (_selectedImage != null) ...[
+                      ModernCard(
+                        borderRadius: AppTheme.radiusXL,
+                        padding: EdgeInsets.zero,
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusXL,
+                              ),
+                              child: Container(
+                                constraints: const BoxConstraints(
+                                  maxHeight: 350,
+                                ),
+                                child: Image.file(
+                                  _selectedImage!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
                                 ),
                               ),
-                            )
-                          : const Icon(Icons.analytics),
-                      label: Text(
-                        _isLoading ? _t('detecting') : _t('detect_disease'),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                    )
-                  else
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: _showImageSourceDialog,
-                          icon: const Icon(Icons.add_a_photo),
-                          label: Text(_t('select_image')),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
                             ),
-                          ),
+                            Positioned(
+                              top: AppTheme.paddingM,
+                              right: AppTheme.paddingM,
+                              child: GestureDetector(
+                                onTap: _clearImage,
+                                child: Container(
+                                  padding: const EdgeInsets.all(
+                                    AppTheme.paddingS,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: AppTheme.charcoal,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 12),
+                      ),
+                      const SizedBox(height: AppTheme.paddingXL),
+                      GradientButton(
+                        label: _isLoading
+                            ? _t('detecting')
+                            : _t('detect_disease'),
+                        icon: _isLoading ? null : Icons.analytics,
+                        onPressed: _isLoading ? () {} : _detectDisease,
+                        isLoading: _isLoading,
+                      ),
+                    ] else ...[
+                      // Quick Action Cards
+                      if (_isOnline)
+                        _buildQuickActionCard(
+                          context,
+                          icon: Icons.add_a_photo,
+                          title: _t('scan_plant'),
+                          subtitle: _t('take_photo_or_gallery'),
+                          color: AppTheme.primaryGreen,
+                          onTap: _showImageSourceDialog,
+                        )
+                      else
+                        _buildQuickActionCard(
+                          context,
+                          icon: Icons.eco,
+                          title: _t('offline_diagnosis'),
+                          subtitle: _t('offline_diagnosis_subtitle'),
+                          color: AppTheme.accentGreen,
+                          onTap: _goToOfflineMode,
+                        ),
+
+                      const SizedBox(height: AppTheme.paddingL),
+
+                      // Secondary Actions
+                      if (_isOnline) ...[
+                        Text(
+                          _t('or'),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppTheme.mediumGrey,
+                                fontWeight: FontWeight.w600,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppTheme.paddingL),
                         OutlinedButton.icon(
                           onPressed: _goToOfflineMode,
                           icon: const Icon(Icons.eco),
-                          label: Text(_t('or_use_offline_mode')),
+                          label: Text(_t('use_offline_mode')),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppTheme.paddingL,
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusM,
+                              ),
                             ),
                           ),
                         ),
                       ],
-                    ),
-              ],
-            ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
