@@ -10,7 +10,7 @@ import '../models/detection_result.dart';
 import '../models/nearby_alert.dart';
 import 'offline_detection_screen.dart';
 import 'detection_result_screen.dart';
-import 'treatment_options_screen.dart';
+import 'chat_screen.dart';
 import '../utils/constants.dart';
 import '../utils/localization.dart';
 
@@ -473,91 +473,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Show detection result in dialog
-  void _showDetectionResultDialog(DetectionResult result) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(_t('detection_result')),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildResultRow(_t('crop'), result.crop),
-                _buildResultRow(_t('disease'), result.disease),
-                _buildResultRow(
-                  _t('confidence'),
-                  '${(result.confidence * 100).toStringAsFixed(1)}%',
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '${_t('remedies')}:',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: result.remedies.map((remedy) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text('• $remedy'),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TreatmentOptionsScreen(
-                      disease: result.disease,
-                      remedies: result.remedies,
-                      languageCode: _languageCode,
-                    ),
-                  ),
-                );
-              },
-              child: Text(_t('treatment_options')),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(_t('close')),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  /// Helper to build result row
-  Widget _buildResultRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(value),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -565,6 +480,17 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(_t('app_title')),
         centerTitle: true,
         actions: [
+          // Chat button
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ChatScreen()),
+              );
+            },
+            tooltip: 'Chat Assistant',
+          ),
           if (_languagePacks.isNotEmpty)
             PopupMenuButton<String>(
               onSelected: _setLanguage,

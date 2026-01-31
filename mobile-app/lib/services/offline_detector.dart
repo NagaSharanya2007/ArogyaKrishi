@@ -10,7 +10,7 @@ class OfflineDetector {
       final result = await _connectivity.checkConnectivity();
 
       // Consider device online if has any active connection
-      return result != ConnectivityResult.none;
+      return !result.contains(ConnectivityResult.none) && result.isNotEmpty;
     } catch (e) {
       // Assume offline if check fails
       return false;
@@ -22,19 +22,18 @@ class OfflineDetector {
     try {
       final result = await _connectivity.checkConnectivity();
 
-      switch (result) {
-        case ConnectivityResult.mobile:
-          return 'Mobile Network';
-        case ConnectivityResult.wifi:
-          return 'WiFi Connected';
-        case ConnectivityResult.ethernet:
-          return 'Ethernet Connected';
-        case ConnectivityResult.vpn:
-          return 'VPN Connected';
-        case ConnectivityResult.none:
-          return 'No Connection';
-        default:
-          return 'Unknown';
+      if (result.contains(ConnectivityResult.mobile)) {
+        return 'Mobile Network';
+      } else if (result.contains(ConnectivityResult.wifi)) {
+        return 'WiFi Connected';
+      } else if (result.contains(ConnectivityResult.ethernet)) {
+        return 'Ethernet Connected';
+      } else if (result.contains(ConnectivityResult.vpn)) {
+        return 'VPN Connected';
+      } else if (result.contains(ConnectivityResult.none) || result.isEmpty) {
+        return 'No Connection';
+      } else {
+        return 'Unknown';
       }
     } catch (e) {
       return 'Unable to determine';
@@ -44,7 +43,7 @@ class OfflineDetector {
   /// Stream of connectivity changes
   static Stream<bool> get onConnectivityChanged {
     return _connectivity.onConnectivityChanged.map((result) {
-      return result != ConnectivityResult.none;
+      return !result.contains(ConnectivityResult.none) && result.isNotEmpty;
     });
   }
 }
