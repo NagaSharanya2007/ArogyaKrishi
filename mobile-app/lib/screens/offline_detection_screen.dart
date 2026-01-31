@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../services/mock_data_service.dart';
 import '../services/image_asset_service.dart';
+import '../services/notification_service.dart';
 import '../utils/constants.dart';
 import '../utils/localization.dart';
 import 'offline_detection_result_screen.dart';
@@ -502,7 +502,7 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
   }
 
   /// Analyze symptoms and find matching disease
-  void _analyzeSymptoms() {
+  Future<void> _analyzeSymptoms() async {
     final availableDiseases = OfflineMockDataService.getDiseasesForCrop(
       _selectedCrop!.id,
     );
@@ -538,7 +538,16 @@ class _OfflineDetectionScreenState extends State<OfflineDetectionScreen> {
 
     if (bestMatchId != null && maxMatches > 0) {
       final disease = OfflineMockDataService.getDiseaseById(bestMatchId!);
-      // Navigate to result screen instead of showing inline
+
+      // Send offline detection notification
+      await NotificationService.sendDetectionNotification(
+        crop: _selectedCrop!.id,
+        disease: disease.id,
+        confidence: (maxMatches / _selectedSymptoms.length).clamp(0.0, 1.0),
+        language: _languageCode,
+      );
+
+      // Navigate to result screen
       Navigator.push(
         context,
         MaterialPageRoute(

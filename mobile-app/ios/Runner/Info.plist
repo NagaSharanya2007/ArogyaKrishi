@@ -47,5 +47,9 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We use your location to show nearby pesticide stores.</string>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>We send you notifications for disease detections and crop care reminders.</string>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 </dict>
 </plist>

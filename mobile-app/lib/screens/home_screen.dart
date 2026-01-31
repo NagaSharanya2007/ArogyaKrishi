@@ -7,12 +7,14 @@ import '../services/image_service.dart';
 import '../services/api_service.dart';
 import '../services/offline_detector.dart';
 import '../services/search_cache_service.dart';
+import '../services/notification_service.dart';
 import '../models/detection_result.dart';
 import '../models/nearby_alert.dart';
 import 'offline_detection_screen.dart';
 import 'detection_result_screen.dart';
 import 'chat_screen.dart';
 import 'search_history_screen.dart';
+import 'notification_inbox_screen.dart';
 import '../utils/constants.dart';
 import '../utils/localization.dart';
 
@@ -464,6 +466,17 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
 
+      // Send detection notification
+      if (result.disease != null && result.disease!.isNotEmpty) {
+        await NotificationService.sendDetectionNotification(
+          crop: result.crop ?? 'Unknown',
+          disease: result.disease ?? 'Unknown',
+          confidence: result.confidence ?? 0.0,
+          language: _languageCode,
+        );
+        setState(() {}); // Refresh to update badge count
+      }
+
       // Show result screen
       if (mounted) {
         _showDetectionResult(result);
@@ -492,6 +505,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Get count of unread notifications
+  Future<int> _getUnreadNotificationCount() async {
+    try {
+      final notifications = await NotificationService.getNotifications();
+      return notifications.where((n) => !n.isRead).length;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -499,6 +522,54 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(_t('app_title')),
         centerTitle: true,
         actions: [
+          // Notifications button with badge
+          FutureBuilder<int>(
+            future: _getUnreadNotificationCount(),
+            builder: (context, snapshot) {
+              final unreadCount = snapshot.data ?? 0;
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationInboxScreen(),
+                        ),
+                      );
+                    },
+                    tooltip: 'Notifications',
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                        child: Center(
+                          child: Text(
+                            unreadCount > 99 ? '99+' : '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           // Search History button
           IconButton(
             icon: const Icon(Icons.history),
